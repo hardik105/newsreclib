@@ -12,7 +12,7 @@ from newsreclib.metrics.personalization import Personalization
 from newsreclib.models.abstract_recommender import AbstractRecommneder
 from newsreclib.models.components.encoders.news.category import LinearEncoder
 from newsreclib.models.components.encoders.news.news import NewsEncoder
-from newsreclib.models.components.encoders.news.text import PLM, CNNAddAtt
+from newsreclib.models.components.encoders.news.text import PLM, CNNCrossAtt
 from newsreclib.models.components.encoders.user.naml import UserEncoder
 from newsreclib.models.components.layers.click_predictor import DotProduct
 
