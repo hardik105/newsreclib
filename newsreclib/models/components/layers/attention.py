@@ -3,6 +3,22 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
+class CrossAttention(nn.Module):
+    def __init__(self, input_dim: int, num_heads: int, dropout_probability: float):
+        super().__init__()
+        self.mha = nn.MultiheadAttention(embed_dim=input_dim, num_heads=num_heads, dropout=dropout_probability, batch_first=True)
+        self.output_proj = nn.Linear(input_dim, input_dim)
+        self.dropout = nn.Dropout(dropout_probability)
+
+    def forward(self, input_vector: torch.Tensor, context: torch.Tensor = None) -> torch.Tensor:
+        # input_vector: (batch_size, seq_len, input_dim)
+        # context: (batch_size, context_len, input_dim) or None
+        if context is None:
+            context = input_vector  # self-attention fallback
+        attn_output, _ = self.mha(query=input_vector, key=context, value=context)
+        pooled = attn_output.mean(dim=1)  # (batch_size, input_dim)
+        return self.dropout(self.output_proj(pooled))
+        
 class AdditiveAttention(nn.Module):
     def __init__(self, input_dim: int, query_dim: int) -> None:
         super().__init__()
