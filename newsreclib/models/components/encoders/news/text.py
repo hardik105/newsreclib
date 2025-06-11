@@ -107,7 +107,48 @@ class PLM(nn.Module):
             text_vector = self.dropout(text_vector)
 
         return text_vector
+class CNNCrossAtt(nn.Module):
+    """Implements a text encoder based on CNN and cross multi-head attention."""
 
+    def __init__(
+        self,
+        pretrained_embeddings: torch.Tensor,
+        embed_dim: int,
+        num_filters: int,
+        window_size: int,
+        num_heads: int,
+        dropout_probability: float,
+    ) -> None:
+        super().__init__()
+
+        self.embedding_layer = nn.Embedding.from_pretrained(
+            torch.FloatTensor(pretrained_embeddings), freeze=False, padding_idx=0
+        )
+        self.cnn = nn.Conv2d(
+            in_channels=1,
+            out_channels=num_filters,
+            kernel_size=(window_size, embed_dim),
+            padding=(int((window_size - 1) / 2), 0),
+        )
+        self.cross_attention = CrossAttention(input_dim=num_filters, num_heads=num_heads, dropout_probability=dropout_probability)
+        self.dropout = nn.Dropout(dropout_probability)
+
+    def forward(self, text: torch.Tensor, context: torch.Tensor = None) -> torch.Tensor:
+        # batch_size, num_words_text, embed_dim
+        text_vector = self.embedding_layer(text)
+        text_vector = self.dropout(text_vector)
+
+        # batch_size, num_filters, num_words_text
+        text_vector = self.cnn(text_vector.unsqueeze(dim=1)).squeeze(dim=3)
+        text_vector = F.relu(text_vector)
+        text_vector = self.dropout(text_vector)
+
+        # batch_size, num_words_text, num_filters
+        text_vector = text_vector.transpose(1, 2)
+
+        # Cross-attention (or self-attention if context is None)
+        text_vector = self.cross_attention(text_vector, context)
+        return text_vector
 
 class CNNAddAtt(nn.Module):
     """Implements a text encoder based on CNN and additive attention.
