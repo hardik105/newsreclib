@@ -137,7 +137,7 @@ class NAMLModule(AbstractRecommneder):
             pretrained_embeddings = self._init_embedding(
                 filepath=self.hparams.pretrained_embeddings_path
             )
-            text_encoder = CNNAddAtt(
+            text_encoder = CNNCrossAtt(
                 pretrained_embeddings=pretrained_embeddings,
                 embed_dim=self.hparams.text_embed_dim,
                 num_filters=self.hparams.num_filters,
